@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Student Hub</title>
+<meta name="theme-color" content="#14213D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%2314213D'/%3E%3Crect x='22' y='70' width='84' height='22' rx='4' fill='%23FFD23F'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#EEF2F7; --card:#fff; --ink:#14213D; --muted:#5B6785; --line:#D8DFEA;
+  --mark:#FFD23F; --ok:#1F8F5F; --bad:#C93C3C; --blue:#2F5DE0;
+  --font:"Avenir Next","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0E1424; --card:#18203A; --ink:#EAF0FF; --muted:#9AA7C7; --line:#2A3558; --blue:#7FA0FF; --ok:#4CC48D; --bad:#FF7A7A}
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.side{background:#14213D;color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin-bottom:24px}
+.mark{background:var(--mark);color:#14213D;border-radius:8px;padding:2px 8px;font-weight:900}
+#nav{display:flex;flex-direction:column;gap:2px}
+#nav a{color:#C9D3F0;text-decoration:none;padding:10px 12px;border-radius:10px;font-weight:600}
+#nav a:hover{background:rgba(255,255,255,.08)}
+#nav a.on{background:var(--mark);color:#14213D}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+main{padding:28px;max-width:980px;width:100%;outline:none}
+h1{font-size:30px;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stat{font-size:34px;font-weight:800;line-height:1}
+.muted{color:var(--muted);font-size:14px}
+form.inline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
+textarea{width:100%;min-height:120px;resize:vertical}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--blue)}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 14px;cursor:pointer;background:var(--ink);color:var(--bg)}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.hi{background:var(--mark);color:#14213D}
+button.ok{background:var(--ok);color:#fff} button.bad{background:var(--bad);color:#fff}
+button.sm{padding:5px 10px;font-size:14px}
+.pill{display:inline-block;border-radius:99px;padding:2px 10px;font-size:13px;font-weight:700;background:var(--mark);color:#14213D}
+.pill.ok{background:var(--ok);color:#fff}.pill.bad{background:var(--bad);color:#fff}.pill.plain{background:var(--line);color:var(--ink)}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0}
+.bar>i{display:block;height:100%;background:var(--ok)}
+.bar.low>i{background:var(--bad)}
+.empty{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--muted)}
+.done .t{text-decoration:line-through;color:var(--muted)}
+.chat{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.msg{padding:10px 14px;border-radius:14px;max-width:85%;white-space:pre-wrap}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--bg)}
+.msg.ai{align-self:flex-start;background:var(--card);border:1px solid var(--line)}
+.day h2{margin-top:18px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  .side{position:sticky;height:auto;padding:10px;z-index:5}
+  .brand{margin-bottom:8px;font-size:16px}
+  #nav{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  #nav a{white-space:nowrap;padding:8px 12px}
+  main{padding:18px 14px 40px}
+  h1{font-size:25px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="mark">SH</span><span>Student Hub</span></div>
+    <nav id="nav"></nav>
+  </aside>
+  <main id="view" tabindex="-1"></main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+
+const KEY = "ssh:v1";
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const ROUTES = [
+  ["home", "Home"], ["notes", "Notes"], ["timetable", "Timetable"], ["assignments", "Assignments"],
+  ["attendance", "Attendance"], ["exams", "Exams"], ["ai", "Study Assistant"], ["groups", "Study Groups"]
+];
+const DEFAULTS = {
+  notes: [], timetable: [], assignments: [], attendance: [], exams: [], groups: [], chat: [],
+  settings: { target: 75, apiKey: "", model: "claude-sonnet-4-6" }
+};
+
+let S = load();
+const UI = { noteFilter: "", noteSearch: "", editNote: null, busy: false };
+
+function load() {
+  try { return { ...structuredClone(DEFAULTS), ...JSON.parse(localStorage.getItem(KEY) || "{}") }; }
+  catch { return structuredClone(DEFAULTS); }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch { toast("Could not save — browser storage is full or blocked."); }
+}
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = u => /^https?:\/\//i.test(u) ? u : "";
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function daysUntil(dateStr) {
+  const d = new Date(dateStr + "T00:00:00"), n = new Date(); n.setHours(0, 0, 0, 0);
+  return Math.round((d - n) / 864e5);
+}
+function dueLabel(n) {
+  if (n < 0) return `${-n} day${n === -1 ? "" : "s"} ago`;
+  if (n === 0) return "Today";
+  if (n === 1) return "Tomorrow";
+  return `In ${n} days`;
+}
+function subjects() {
+  const s = new Set();
+  [S.notes, S.timetable, S.assignments, S.attendance, S.exams].forEach(l => l.forEach(x => x.subject && s.add(x.subject)));
+  return [...s].sort();
+}
+const subjectList = () => `<datalist id="subs">${subjects().map(s => `<option value="${esc(s)}">`).join("")}</datalist>`;
+const empty = msg => `<div class="empty">${esc(msg)}</div>`;
+const pct = a => (a.total ? (a.attended / a.total) * 100 : 0);
+
+function attendanceAdvice(a) {
+  const t = S.settings.target, p = pct(a);
+  if (!a.total) return { ok: true, text: "Log your first class to see your percentage." };
+  if (p >= t) {
+    const skip = Math.floor((100 * a.attended - t * a.total) / t);
+    return { ok: true, text: skip > 0 ? `You can miss ${skip} more class${skip === 1 ? "" : "es"} and stay at ${t}% or above.` : `Right at ${t}%. Missing the next class drops you below.` };
+  }
+  if (t >= 100) return { ok: false, text: "You cannot reach 100% after missing a class." };
+  const need = Math.ceil((t * a.total - 100 * a.attended) / (100 - t));
+  return { ok: false, text: `Attend the next ${need} class${need === 1 ? "" : "es"} in a row to reach ${t}%.` };
+}
+
+const views = {
+  home() {
+    const today = DAYS[(new Date().getDay() + 6) % 7];
+    const classes = S.timetable.filter(c => c.day === today).sort((a, b) => a.start.localeCompare(b.start));
+    const pending = S.assignments.filter(a => !a.done);
+    const nextExam = S.exams.filter(e => daysUntil(e.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0];
+    const low = S.attendance.filter(a => a.total && pct(a) < S.settings.target);
+    return `
+      <h1>Today, ${esc(today)}</h1>
+      <p class="sub">${classes.length ? `${classes.length} class${classes.length === 1 ? "" : "es"} on your timetable.` : "No classes on your timetable today."}</p>
+      <div class="grid">
+        <div class="card"><div class="stat">${pending.length}</div><div class="muted">assignments pending</div><p><a href="#assignments">Open tracker</a></p></div>
+        <div class="card"><div class="stat">${nextExam ? daysUntil(nextExam.date) : "–"}</div><div class="muted">${nextExam ? `days until ${esc(nextExam.title)}` : "no upcoming exams"}</div><p><a href="#exams">Open countdown</a></p></div>
+        <div class="card"><div class="stat">${low.length}</div><div class="muted">subject${low.length === 1 ? "" : "s"} below ${S.settings.target}% attendance</div><p><a href="#attendance">Open calculator</a></p></div>
+      </div>
+      <h2 style="margin-top:20px">Today's classes</h2>
+      ${classes.length ? classes.map(c => `<div class="card row between"><div><strong>${esc(c.subject)}</strong><div class="muted">${esc(c.start)}–${esc(c.end)}${c.room ? " · " + esc(c.room) : ""}</div></div><span class="pill plain">${esc(c.type)}</span></div>`).join("") : empty("Add classes in Timetable and they show up here.")}
+      <h2 style="margin-top:20px">Your data</h2>
+      <div class="row">
+        <button class="alt" data-act="export">Download backup</button>
+        <label class="row muted">Restore backup <input type="file" accept="application/json" data-act="import"></label>
+      </div>`;
+  },
+
+  notes() {
+    const e = S.notes.find(n => n.id === UI.editNote);
+    const q = UI.noteSearch.toLowerCase();
+    const list = S.notes.filter(n => (!UI.noteFilter || n.subject === UI.noteFilter) && (!q || (n.title + n.body).toLowerCase().includes(q)))
+      .sort((a, b) => b.updated - a.updated);
+    return `
+      <h1>Notes</h1><p class="sub">Organised by subject.</p>
+      <form class="card" data-form="note">
+        <div class="row" style="margin-bottom:8px">
+          <input name="subject" list="subs" placeholder="Subject" required value="${esc(e?.subject)}">
+          <input name="title" placeholder="Note title" required style="flex:1" value="${esc(e?.title)}">
+        </div>
+        <textarea name="body" placeholder="Write your note…">${esc(e?.body)}</textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="hi">${e ? "Update note" : "Save note"}</button>
+          ${e ? `<button type="button" class="alt" data-act="cancel-note">Cancel</button>` : ""}
+        </div>
+      </form>
+      <div class="row" style="margin-bottom:12px">
+        <select data-act="note-filter" aria-label="Filter by subject"><option value="">All subjects</option>${subjects().map(s => `<option ${s === UI.noteFilter ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>
+        <input type="search" data-act="note-search" placeholder="Search notes" value="${esc(UI.noteSearch)}">
+      </div>
+      ${list.length ? list.map(n => `<div class="card"><div class="row between"><strong>${esc(n.title)}</strong><span class="pill">${esc(n.subject)}</span></div>
+        <p style="white-space:pre-wrap">${esc(n.body)}</p>
+        <div class="row"><button class="alt sm" data-act="edit-note" data-id="${n.id}">Edit</button><button class="alt sm" data-act="del-note" data-id="${n.id}">Delete</button></div></div>`).join("")
+        : empty("No notes yet. Add your first note above.")}
+      ${subjectList()}`;
+  },
+
+  timetable() {
+    return `
+      <h1>Timetable</h1><p class="sub">Lectures, labs and practicals.</p>
+      <form class="inline card" data-form="class">
+        <select name="day" aria-label="Day">${DAYS.map(d => `<option>${d}</option>`).join("")}</select>
+        <input type="time" name="start" required aria-label="Start time">
+        <input type="time" name="end" required aria-label="End time">
+        <input name="subject" list="subs" placeholder="Subject" required>
+        <select name="type" aria-label="Type"><option>Lecture</option><option>Lab</option><option>Practical</option></select>
+        <input name="room" placeholder="Room (optional)">
+        <button class="hi">Add class</button>
+      </form>
+      ${S.timetable.length ? DAYS.map(d => {
+        const items = S.timetable.filter(c => c.day === d).sort((a, b) => a.start.localeCompare(b.start));
+        return items.length ? `<div class="day"><h2>${d}</h2>${items.map(c => `<div class="card row between"><div><strong>${esc(c.subject)}</strong><div class="muted">${esc(c.start)}–${esc(c.end)}${c.room ? " · " + esc(c.room) : ""}</div></div>
+          <div class="row"><span class="pill plain">${esc(c.type)}</span><button class="alt sm" data-act="del-class" data-id="${c.id}">Remove</button></div></div>`).join("")}</div>` : "";
+      }).join("") : empty("Your week is empty. Add a class above.")}
+      ${subjectList()}`;
+  },
+
+  assignments() {
+    const sorted = [...S.assignments].sort((a, b) => a.done - b.done || (a.due || "9").localeCompare(b.due || "9"));
+    const row = a => {
+      const n = a.due ? daysUntil(a.due) : null;
+      const tag = a.done ? `<span class="pill ok">Done</span>` : n === null ? "" : `<span class="pill ${n < 0 ? "bad" : ""}">${n < 0 ? "Overdue" : dueLabel(n)}</span>`;
+      return `<div class="card row between ${a.done ? "done" : ""}">
+        <label class="row"><input type="checkbox" data-act="toggle-assign" data-id="${a.id}" ${a.done ? "checked" : ""}>
+        <span><span class="t"><strong>${esc(a.title)}</strong></span><div class="muted">${esc(a.subject || "No subject")}${a.due ? " · due " + esc(a.due) : ""}</div></span></label>
+        <div class="row">${tag}<button class="alt sm" data-act="del-assign" data-id="${a.id}">Delete</button></div></div>`;
+    };
+    return `
+      <h1>Assignments</h1><p class="sub">${S.assignments.filter(a => !a.done).length} pending, ${S.assignments.filter(a => a.done).length} completed.</p>
+      <form class="inline card" data-form="assign">
+        <input name="title" placeholder="Assignment" required style="flex:1">
+        <input name="subject" list="subs" placeholder="Subject">
+        <input type="date" name="due" aria-label="Due date">
+        <button class="hi">Add assignment</button>
+      </form>
+      ${sorted.length ? sorted.map(row).join("") : empty("Nothing to track yet. Add an assignment above.")}
+      ${subjectList()}`;
+  },
+
+  attendance() {
+    return `
+      <h1>Attendance</h1><p class="sub">See your percentage and how many classes you need or can skip.</p>
+      <form class="inline card" data-form="subject-att">
+        <input name="subject" list="subs" placeholder="Subject" required>
+        <input type="number" name="attended" min="0" placeholder="Attended" required style="width:110px">
+        <input type="number" name="total" min="0" placeholder="Total held" required style="width:110px">
+        <button class="hi">Add subject</button>
+        <label class="row muted" style="margin-left:auto">Required %
+          <input type="number" min="1" max="100" value="${S.settings.target}" data-act="target" style="width:80px"></label>
+      </form>
+      ${S.attendance.length ? S.attendance.map(a => {
+        const p = pct(a), adv = attendanceAdvice(a);
+        return `<div class="card"><div class="row between"><strong>${esc(a.subject)}</strong><span class="pill ${adv.ok ? "ok" : "bad"}">${p.toFixed(1)}%</span></div>
+          <div class="bar ${adv.ok ? "" : "low"}"><i style="width:${Math.min(100, p)}%"></i></div>
+          <div class="muted">${a.attended} attended of ${a.total} classes</div><p>${esc(adv.text)}</p>
+          <div class="row"><button class="ok sm" data-act="present" data-id="${a.id}">Present</button><button class="bad sm" data-act="absent" data-id="${a.id}">Absent</button>
+          <button class="alt sm" data-act="del-att" data-id="${a.id}">Remove</button></div></div>`;
+      }).join("") : empty("Add a subject with your attended and total classes.")}
+      ${subjectList()}`;
+  },
+
+  exams() {
+    const list = [...S.exams].sort((a, b) => a.date.localeCompare(b.date));
+    return `
+      <h1>Exam countdown</h1><p class="sub">Exams and submission deadlines, soonest first.</p>
+      <form class="inline card" data-form="exam">
+        <input name="title" placeholder="Exam or deadline" required style="flex:1">
+        <input name="subject" list="subs" placeholder="Subject">
+        <input type="date" name="date" required aria-label="Date">
+        <select name="kind" aria-label="Type"><option>Exam</option><option>Submission</option></select>
+        <button class="hi">Add</button>
+      </form>
+      ${list.length ? list.map(e => {
+        const n = daysUntil(e.date), past = n < 0;
+        return `<div class="card row between" ${past ? 'style="opacity:.55"' : ""}><div><strong>${esc(e.title)}</strong>
+          <div class="muted">${esc(e.subject || e.kind)} · ${esc(e.date)}</div></div>
+          <div class="row"><span class="pill ${past ? "plain" : n <= 3 ? "bad" : ""}">${past ? "Passed" : dueLabel(n)}</span><span class="pill plain">${esc(e.kind)}</span>
+          <button class="alt sm" data-act="del-exam" data-id="${e.id}">Delete</button></div></div>`;
+      }).join("") : empty("No exams or deadlines yet. Add one above.")}
+      ${subjectList()}`;
+  },
+
+  ai() {
+    const s = S.settings;
+    return `
+      <h1>Study assistant</h1><p class="sub">Ask a question and get a simple explanation.</p>
+      <details class="card" ${s.apiKey ? "" : "open"}><summary><strong>Connect your Anthropic API key</strong></summary>
+        <p class="muted">Your key stays in this browser and is sent only to Anthropic. For a public app, route requests through your own server instead.</p>
+        <form class="inline" data-form="ai-settings">
+          <input type="password" name="apiKey" placeholder="sk-ant-…" value="${esc(s.apiKey)}" autocomplete="off" style="flex:1">
+          <input name="model" value="${esc(s.model)}" aria-label="Model">
+          <button class="hi">Save</button>
+        </form></details>
+      <div class="chat" id="chat">${S.chat.length ? S.chat.map(m => `<div class="msg ${m.role === "user" ? "me" : "ai"}">${esc(m.content)}</div>`).join("") : empty("Try: “Explain Ohm's law like I'm new to physics.”")}</div>
+      <form class="inline" data-form="ask">
+        <input name="q" placeholder="Ask anything about your subjects" required style="flex:1" ${UI.busy ? "disabled" : ""}>
+        <button class="hi" ${UI.busy ? "disabled" : ""}>${UI.busy ? "Thinking…" : "Ask"}</button>
+        <button type="button" class="alt" data-act="clear-chat">Clear chat</button>
+      </form>`;
+  },
+
+  groups() {
+    return `
+      <h1>Study groups</h1><p class="sub">Keep classmates and shared links together. Groups are stored on this device only.</p>
+      <form class="inline card" data-form="group">
+        <input name="name" placeholder="Group name" required style="flex:1"><button class="hi">Create group</button>
+      </form>
+      ${S.groups.length ? S.groups.map(g => `<div class="card">
+        <div class="row between"><strong>${esc(g.name)}</strong><button class="alt sm" data-act="del-group" data-id="${g.id}">Delete group</button></div>
+        <h2 style="margin-top:12px">Members</h2>
+        <div class="row" style="margin-bottom:8px">${g.members.length ? g.members.map(m => `<span class="pill plain">${esc(m)}</span>`).join("") : '<span class="muted">No members yet.</span>'}</div>
+        <form class="inline" data-form="member"><input type="hidden" name="id" value="${g.id}"><input name="name" placeholder="Member name" required><button class="alt sm">Add member</button></form>
+        <h2>Shared resources</h2>
+        $
